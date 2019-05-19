@@ -55,22 +55,24 @@ public class plane : MonoBehaviour
         // α * 2 * PI * (AR / AR + 2)
         var inducedLift = angleOfAttack * (aspectRatio / (aspectRatio + 2f)) * 2f * Mathf.PI;
 
-        // CL ^ 2 / (AR * PI)
-        var inducedDrag = (inducedLift * inducedLift) / (aspectRatio * Mathf.PI);
+        
 
         // V ^ 2 * R * 0.5 * A
         var pressure = rb.velocity.sqrMagnitude * 1.2754f * 0.5f * wingArea;
 
         var cl = 2 * Mathf.PI * angleOfAttack * Mathf.Deg2Rad;
+        var cd = 0.0039f * angleOfAttack * angleOfAttack + 0.025f;
 
         //var lift = inducedLift * pressure;
         var lift = rb.velocity.magnitude * rb.velocity.magnitude * 1.225f * wingArea * cl;
-        var drag = (0.021f + inducedDrag) * pressure;
+        var inducedDrag = (lift * lift) / (0.5f * 1.225f * rb.velocity.magnitude * rb.velocity.magnitude * wingArea * Mathf.PI * 0.9f * aspectRatio);
+        var formDrag = 0.5f * 1.225f * rb.velocity.magnitude * rb.velocity.magnitude * wingArea * cd;
+        var drag = inducedDrag + formDrag;
 
         // *flip sign(s) if necessary*
-        var dragDirection = rb.velocity.normalized;
+        var dragDirection = Quaternion.LookRotation(rb.velocity) * Vector3.back;
         //var liftDirection = Vector3.Cross(dragDirection, transform.right);
-        var liftDirection = transform.up;
+        var liftDirection = Quaternion.LookRotation(rb.velocity) * Vector3.up;
         Debug.DrawRay(rb.position, liftDirection * 100, Color.green);
         Debug.DrawRay(transform.position, transform.forward * 100, Color.red);
         Debug.Log("lift : " + lift);
@@ -79,6 +81,7 @@ public class plane : MonoBehaviour
 
         // Lift + Drag = Total Force
         rb.AddForce(liftDirection * lift);
+        rb.AddForce(dragDirection * drag);
     }
 
     private void InputControl()
