@@ -7,8 +7,10 @@ public class plane : MonoBehaviour
     public float angleOfAttack;
     public Rigidbody rb;
     public float EnginePower;
+    public float torque;
     private void FixedUpdate()
     {
+        InputControl();
         rb.AddForce(transform.forward * EnginePower);
         calculateForces();
     }
@@ -16,7 +18,7 @@ public class plane : MonoBehaviour
     public float wingSpan = 13.56f;
     public float wingArea = 78.04f;
     private float aspectRatio;
-    void Update()
+    /*void Update()
     {
         if (Input.GetKey("s"))
         {
@@ -26,13 +28,12 @@ public class plane : MonoBehaviour
         {
             angleOfAttack -= 0.05f;
         }
-    }
+    }*/
     private void Awake()
     {
 
         //rb.drag = Mathf.Epsilon;
         aspectRatio = (wingSpan * wingSpan) / wingArea;
-        Debug.Log(rb.transform.GetComponentInChildren<Renderer>().bounds.size);
     }
     
     private void calculateForces()
@@ -69,5 +70,14 @@ public class plane : MonoBehaviour
         rb.AddForce(liftDirection * lift);
     }
 
+    private void InputControl()
+    {
+        float pitch = Input.GetAxis("Vertical") * torque;
+        float roll = Input.GetAxis("Roll") * torque;
+
+        rb.AddTorque(transform.right * pitch);
+        rb.AddTorque(transform.forward * roll);
+        Debug.Log("pitch: " + pitch);
+    }
 
 }
