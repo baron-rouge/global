@@ -15,8 +15,8 @@ public class plane : MonoBehaviour
         calculateForces();
     }
     
-    public float wingSpan = 13.56f;
-    public float wingArea = 78.04f;
+    public float wingSpan = 10f;
+    public float wingArea = 43f;
     private float aspectRatio;
     /*void Update()
     {
@@ -43,6 +43,14 @@ public class plane : MonoBehaviour
         Vector3 directionVector = Vector3.Normalize(rb.velocity) * 360;
         //var angleOfAttack = Vector3.Angle(transform.forward, directionVector);
 
+        var dirVel = Quaternion.LookRotation(rb.velocity) * Vector3.up;
+
+        Vector3 forward = rb.rotation * Vector3.forward;
+
+        angleOfAttack = Mathf.Asin(Vector3.Dot(forward, dirVel)) * Mathf.Rad2Deg;
+
+
+
         
         // α * 2 * PI * (AR / AR + 2)
         var inducedLift = angleOfAttack * (aspectRatio / (aspectRatio + 2f)) * 2f * Mathf.PI;
@@ -51,9 +59,12 @@ public class plane : MonoBehaviour
         var inducedDrag = (inducedLift * inducedLift) / (aspectRatio * Mathf.PI);
 
         // V ^ 2 * R * 0.5 * A
-        var pressure = Mathf.Pow(rb.velocity.z, 2) * 1.2754f * 0.5f * wingArea;
+        var pressure = rb.velocity.sqrMagnitude * 1.2754f * 0.5f * wingArea;
 
-        var lift = inducedLift * pressure;
+        var cl = 2 * Mathf.PI * angleOfAttack * Mathf.Deg2Rad;
+
+        //var lift = inducedLift * pressure;
+        var lift = rb.velocity.magnitude * rb.velocity.magnitude * 1.225f * wingArea * cl;
         var drag = (0.021f + inducedDrag) * pressure;
 
         // *flip sign(s) if necessary*
