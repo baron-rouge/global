@@ -13,6 +13,8 @@ public class plane : MonoBehaviour
         InputControl();
         rb.AddForce(transform.forward * EnginePower);
         calculateForces();
+        PitchPID();
+        RollPID();
     }
     
     public float wingSpan = 10f;
@@ -75,9 +77,9 @@ public class plane : MonoBehaviour
         var liftDirection = Quaternion.LookRotation(rb.velocity) * Vector3.up;
         Debug.DrawRay(rb.position, liftDirection * 100, Color.green);
         Debug.DrawRay(transform.position, transform.forward * 100, Color.red);
-        Debug.Log("lift : " + lift);
-        Debug.Log("speed : " + rb.velocity.z);
-        Debug.Log("AoA : " + angleOfAttack);
+        //Debug.Log("lift : " + lift);
+        //Debug.Log("speed : " + rb.velocity.z);
+        //Debug.Log("AoA : " + angleOfAttack);
 
         // Lift + Drag = Total Force
         rb.AddForce(liftDirection * lift);
@@ -86,12 +88,55 @@ public class plane : MonoBehaviour
 
     private void InputControl()
     {
-        float pitch = Input.GetAxis("Vertical") * torque;
-        float roll = Input.GetAxis("Roll") * torque;
+        float pitch;
+        float roll;
+
+        //pitch = Input.GetAxis("PitchFr") * torque;
+        //roll = Input.GetAxis("RollFr") * torque;
+       
+        
+        pitch = Input.GetAxis("Vertical") * torque;
+        roll = Input.GetAxis("Roll") * torque;
 
         rb.AddTorque(transform.right * pitch);
-        rb.AddTorque(transform.forward * roll);
-        Debug.Log("pitch: " + pitch);
+        rb.AddTorque(transform.forward * roll / 10);
+        //Debug.Log("pitch: " + pitch);
+    }
+
+    private void PitchPID()
+    {
+        PID p = new PID(1000, 0, 0);
+        if (Input.GetAxis("Vertical") != 0 || Input.GetAxis("Roll") != 0)
+        {
+            return;
+        }
+        float tarPitch = 0;
+        float curPitch;
+
+        if (rb.rotation.eulerAngles.x > 180)
+        {
+            curPitch = 360 - rb.rotation.eulerAngles.x;
+        }
+        else
+        {
+            curPitch = 0 - rb.rotation.eulerAngles.x;
+        }
+
+        rb.AddTorque(transform.right * p.Update(tarPitch, rb.angularVelocity.x, Time.deltaTime) * 1000);
+        Debug.Log("pitch : " + curPitch);
+    }
+
+    private void RollPID()
+    {
+        PID p = new PID(100, 0, 0);
+        if (Input.GetAxis("Vertical") != 0 || Input.GetAxis("Roll") != 0)
+        {
+            return;
+        }
+        float tarRoll = 0;
+        
+
+        rb.AddTorque(transform.forward * p.Update(tarRoll, rb.angularVelocity.z, Time.deltaTime) * 100);
     }
 
 }
