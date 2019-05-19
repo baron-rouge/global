@@ -18,13 +18,13 @@ public class plane : MonoBehaviour
     private float aspectRatio;
     void Update()
     {
-        if (Input.GetKeyDown("s"))
+        if (Input.GetKey("s"))
         {
-            angleOfAttack += 0.1f;
-            Debug.Log("s a été préssé");
-        } else if (Input.GetKeyDown("z"))
+            angleOfAttack += 0.05f;
+            //Debug.Log("s a été préssé");
+        } else if (Input.GetKey("z"))
         {
-            angleOfAttack -= 0.1f;
+            angleOfAttack -= 0.05f;
         }
     }
     private void Awake()
