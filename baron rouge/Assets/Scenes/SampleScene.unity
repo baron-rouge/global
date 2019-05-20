@@ -995,7 +995,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   angleOfAttack: 1
   rb: {fileID: 1947760212}
-  EnginePower: 1000000
+  EnginePower: 80000
   torque: 1000
   wingSpan: 10
   wingArea: 43

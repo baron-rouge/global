@@ -57,7 +57,7 @@ public class cameraControl : MonoBehaviour
 
             Orbit(camyaw, campitch);
         }
-        transform.LookAt(player.GetComponent<Rigidbody>().velocity * 999, Vector3.up);
+        transform.LookAt(player.transform);
     }
 
     private void Orbit(float _x, float _y)

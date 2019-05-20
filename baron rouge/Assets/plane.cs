@@ -16,7 +16,7 @@ public class plane : MonoBehaviour
         calculateForces();
         PitchPID();
         RollPID();
-        YawPID();
+        //YawPID();
     }
     
     public float wingSpan = 10f;
@@ -60,8 +60,16 @@ public class plane : MonoBehaviour
         var localVelocity = transform.InverseTransformDirection(rb.velocity);
         Vector3 directionVector = Vector3.Normalize(rb.velocity) * 360;
         //var angleOfAttack = Vector3.Angle(transform.forward, directionVector);
-
-        var dirVel = Quaternion.LookRotation(rb.velocity) * Vector3.up;
+        Vector3 dirVel;
+        if (rb.velocity != Vector3.zero)
+        {
+            dirVel = Quaternion.LookRotation(rb.velocity) * Vector3.up;
+        }
+        else
+        {
+            dirVel = Vector3.up;
+        }
+        
 
         Vector3 forward = transform.rotation * Vector3.forward;
 
@@ -77,12 +85,20 @@ public class plane : MonoBehaviour
 
         // V ^ 2 * R * 0.5 * A
         var pressure = rb.velocity.sqrMagnitude * 1.2754f * 0.5f * wingArea;
-
-        var cl = 2 * Mathf.PI * angleOfAttack * Mathf.Deg2Rad;
-        var cd = 0.0039f * angleOfAttack * angleOfAttack + 0.025f;
+        float cl;
+        if (angleOfAttack < -1f || angleOfAttack > 26f)
+        {
+            cl = -Mathf.Abs((angleOfAttack - 13) / 26f) + 1f;
+        }
+        else
+        {
+            cl = Mathf.Clamp(-1f / 100f * (angleOfAttack * angleOfAttack - 26f * angleOfAttack - 31f), 0f, 2f);
+        }
+        //var cl = 2 * Mathf.PI * angleOfAttack * Mathf.Deg2Rad;
+        var cd = 0.001f * Mathf.Clamp(angleOfAttack, 0f, 22f) * Mathf.Clamp(angleOfAttack, 0f, 22f) + 0.025f;
 
         //var lift = inducedLift * pressure;
-        var lift = rb.velocity.magnitude * rb.velocity.magnitude * 1.225f * wingArea * cl;
+        var lift = 0.5f * rb.velocity.magnitude * rb.velocity.magnitude * 1.225f * wingArea * cl;
         var inducedDrag = (lift * lift) / (0.5f * 1.225f * rb.velocity.magnitude * rb.velocity.magnitude * wingArea * Mathf.PI * 0.9f * aspectRatio);
         var formDrag = 0.5f * 1.225f * rb.velocity.magnitude * rb.velocity.magnitude * wingArea * cd;
         var drag = inducedDrag + formDrag;
@@ -99,7 +115,7 @@ public class plane : MonoBehaviour
 
         // Lift + Drag = Total Force
         rb.AddForce(liftDirection * lift);
-        rb.AddForce(dragDirection * drag);
+        //rb.AddForce(dragDirection * drag);
     }
 
     private void InputControl()
@@ -121,8 +137,8 @@ public class plane : MonoBehaviour
 
     private void PitchPID()
     {
-        PIDController p = new PIDController(rb.angularVelocity.x, 10f, 0f, 0f);
-        if (Input.GetAxis("Vertical") != 0 || Input.GetAxis("Roll") != 0)
+        PIDController p = new PIDController(rb.angularVelocity.x, 5f, 10f, 5f);
+        if (Input.GetAxis("Vertical") != 0)
         {
             return;
         }
@@ -141,25 +157,26 @@ public class plane : MonoBehaviour
         rb.AddTorque(transform.right * p.Update(tarPitch, rb.angularVelocity.x, Time.deltaTime) * 1000 * rb.velocity.magnitude);
         
         Debug.Log("pitch : " + curPitch);
+        
     }
 
     private void RollPID()
     {
-        PIDController p = new PIDController(rb.angularVelocity.z, 10f, 0f, 0f);
-        if (Input.GetAxis("Vertical") != 0 || Input.GetAxis("Roll") != 0)
+        PIDController p = new PIDController(rb.angularVelocity.z, 5f, 1f, 5f);
+        if (Input.GetAxis("Roll") != 0)
         {
             return;
         }
         float tarRoll = 0;
         
 
-        rb.AddTorque(transform.forward * p.Update(tarRoll, rb.angularVelocity.z, Time.deltaTime) * 100 * rb.velocity.magnitude);
+        rb.AddTorque(transform.forward * p.Update(tarRoll, rb.angularVelocity.z, Time.deltaTime) * 10 * rb.velocity.magnitude);
     }
 
     private void YawPID()
     {
         PID p = new PID(10f, 1f, 0f);
-        rb.AddTorque(transform.up * p.Update(0, rb.angularVelocity.y, Time.deltaTime) * 100 * rb.velocity.magnitude);
+        rb.AddTorque(transform.up * p.Update(0, rb.angularVelocity.y, Time.deltaTime) * 1000 * rb.velocity.magnitude);
     }
 
     private float lastPError = 0;
