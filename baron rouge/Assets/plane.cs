@@ -5,6 +5,7 @@ using UnityEngine;
 public class plane : MonoBehaviour
 {
     public float angleOfAttack;
+    private float throttle;
     public Rigidbody rb;
     public float EnginePower;
     public float torque;
@@ -15,6 +16,7 @@ public class plane : MonoBehaviour
         calculateForces();
         PitchPID();
         RollPID();
+        YawPID();
     }
     
     public float wingSpan = 10f;
@@ -40,6 +42,20 @@ public class plane : MonoBehaviour
     
     private void calculateForces()
     {
+        /*Quaternion angVel = Quaternion.identity;
+        float zRot = Mathf.Sin(rb.rotation.eulerAngles.z * Mathf.Deg2Rad) * Mathf.Rad2Deg;
+        float prevX = rb.rotation.eulerAngles.x;
+        
+
+        Vector3 rot = new Vector3(0, -zRot * 0.8f, -zRot * 0.5f) * Time.deltaTime;
+        angVel.eulerAngles = rot;
+        angVel *= rb.rotation;
+        angVel.eulerAngles = new Vector3(prevX, angVel.eulerAngles.y, angVel.eulerAngles.z);
+        rb.rotation = angVel;
+        */
+        
+        Vector3 directVel = (rb.rotation * Vector3.forward).normalized * rb.velocity.magnitude;
+        rb.velocity = Vector3.Lerp(rb.velocity, directVel, Time.deltaTime);
         // *flip sign(s) if necessary*
         var localVelocity = transform.InverseTransformDirection(rb.velocity);
         Vector3 directionVector = Vector3.Normalize(rb.velocity) * 360;
@@ -47,7 +63,7 @@ public class plane : MonoBehaviour
 
         var dirVel = Quaternion.LookRotation(rb.velocity) * Vector3.up;
 
-        Vector3 forward = rb.rotation * Vector3.forward;
+        Vector3 forward = transform.rotation * Vector3.forward;
 
         angleOfAttack = Mathf.Asin(Vector3.Dot(forward, dirVel)) * Mathf.Rad2Deg;
 
@@ -75,10 +91,10 @@ public class plane : MonoBehaviour
         var dragDirection = Quaternion.LookRotation(rb.velocity) * Vector3.back;
         //var liftDirection = Vector3.Cross(dragDirection, transform.right);
         var liftDirection = Quaternion.LookRotation(rb.velocity) * Vector3.up;
-        Debug.DrawRay(rb.position, liftDirection * 100, Color.green);
+        Debug.DrawRay(transform.position, liftDirection * 100, Color.green);
         Debug.DrawRay(transform.position, transform.forward * 100, Color.red);
         //Debug.Log("lift : " + lift);
-        //Debug.Log("speed : " + rb.velocity.z);
+        Debug.Log("speed : " + rb.velocity.magnitude);
         //Debug.Log("AoA : " + angleOfAttack);
 
         // Lift + Drag = Total Force
@@ -98,14 +114,14 @@ public class plane : MonoBehaviour
         pitch = Input.GetAxis("Vertical") * torque;
         roll = Input.GetAxis("Roll") * torque;
 
-        rb.AddTorque(transform.right * pitch);
-        rb.AddTorque(transform.forward * roll / 10);
+        rb.AddTorque(transform.right * pitch * rb.velocity.magnitude);
+        rb.AddTorque(transform.forward * roll / 10 * rb.velocity.magnitude);
         //Debug.Log("pitch: " + pitch);
     }
 
     private void PitchPID()
     {
-        PID p = new PID(1000, 0, 0);
+        PIDController p = new PIDController(rb.angularVelocity.x, 10f, 0f, 0f);
         if (Input.GetAxis("Vertical") != 0 || Input.GetAxis("Roll") != 0)
         {
             return;
@@ -113,22 +129,23 @@ public class plane : MonoBehaviour
         float tarPitch = 0;
         float curPitch;
 
-        if (rb.rotation.eulerAngles.x > 180)
+        if (transform.rotation.eulerAngles.x > 180)
         {
-            curPitch = 360 - rb.rotation.eulerAngles.x;
+            curPitch = 360 - transform.rotation.eulerAngles.x;
         }
         else
         {
-            curPitch = 0 - rb.rotation.eulerAngles.x;
+            curPitch = 0 - transform.rotation.eulerAngles.x;
         }
 
-        rb.AddTorque(transform.right * p.Update(tarPitch, rb.angularVelocity.x, Time.deltaTime) * 1000);
+        rb.AddTorque(transform.right * p.Update(tarPitch, rb.angularVelocity.x, Time.deltaTime) * 1000 * rb.velocity.magnitude);
+        
         Debug.Log("pitch : " + curPitch);
     }
 
     private void RollPID()
     {
-        PID p = new PID(100, 0, 0);
+        PIDController p = new PIDController(rb.angularVelocity.z, 10f, 0f, 0f);
         if (Input.GetAxis("Vertical") != 0 || Input.GetAxis("Roll") != 0)
         {
             return;
@@ -136,7 +153,26 @@ public class plane : MonoBehaviour
         float tarRoll = 0;
         
 
-        rb.AddTorque(transform.forward * p.Update(tarRoll, rb.angularVelocity.z, Time.deltaTime) * 100);
+        rb.AddTorque(transform.forward * p.Update(tarRoll, rb.angularVelocity.z, Time.deltaTime) * 100 * rb.velocity.magnitude);
+    }
+
+    private void YawPID()
+    {
+        PID p = new PID(10f, 1f, 0f);
+        rb.AddTorque(transform.up * p.Update(0, rb.angularVelocity.y, Time.deltaTime) * 100 * rb.velocity.magnitude);
+    }
+
+    private float lastPError = 0;
+    private void PIDLoop()
+    {
+        float iError = 0;
+        var pError = 0 - rb.angularVelocity.x;
+        iError += pError * Time.deltaTime;
+        var dError = (pError - lastPError) / Time.deltaTime;
+        lastPError = pError;
+        var tor = 1f * pError + 0 * iError + 0 * dError;
+
+        rb.AddTorque(transform.right * tor * 10000);
     }
 
 }
