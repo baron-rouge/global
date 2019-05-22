@@ -26,4 +26,5 @@ public class ProceduralCone : MonoBehaviour
         MeshUtils.CreateCone(2f, fleche.GetComponent<MeshRenderer>().bounds.center.x - fleche.GetComponent<MeshRenderer>().bounds.extents.x, 0.5f, 18, mesh);
     
     }
+
 }

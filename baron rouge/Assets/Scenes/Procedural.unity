@@ -120,6 +120,38 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &221067288 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: -927199367670048503, guid: abf8966faf3a3ff4d80b8292c13de64f,
+    type: 3}
+  m_PrefabInstance: {fileID: 701860034}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &221067291
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 221067288}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a49af450297c3364699696f090f4ffa9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!64 &221067292
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 221067288}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Convex: 0
+  m_CookingOptions: 14
+  m_Mesh: {fileID: 2534964839176971238, guid: abf8966faf3a3ff4d80b8292c13de64f, type: 3}
 --- !u!4 &536082952 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -4216859302048453862, guid: abf8966faf3a3ff4d80b8292c13de64f,
