@@ -6,6 +6,8 @@
 	<model></model>
 	<!-- auteur de la part -->
 	<author></author>
+	<!-- titre de la part -->
+	<title></title>
 	
 	<!-- nodes d'attache de la part -->
 	<nodes>

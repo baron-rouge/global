@@ -4,11 +4,12 @@ using UnityEngine;
 
 public class plane : MonoBehaviour
 {
-    public float angleOfAttack;
+    float angleOfAttack;
     private float throttle;
     public Rigidbody rb;
     public float EnginePower;
     public float torque;
+    float stall;
     private void FixedUpdate()
     {
         InputControl();
@@ -16,7 +17,7 @@ public class plane : MonoBehaviour
         calculateForces();
         PitchPID();
         RollPID();
-        //YawPID();
+        YawPID();
     }
     
     public float wingSpan = 10f;
@@ -73,49 +74,65 @@ public class plane : MonoBehaviour
 
         Vector3 forward = transform.rotation * Vector3.forward;
 
-        angleOfAttack = Mathf.Asin(Vector3.Dot(forward, dirVel)) * Mathf.Rad2Deg;
-
+        float PerpVelocity = Vector3.Dot(transform.forward, rb.velocity.normalized);
+        //angleOfAttack = Mathf.Asin(Vector3.Dot(forward, dirVel)) * Mathf.Rad2Deg;
+        angleOfAttack = Mathf.Asin(Mathf.Clamp(PerpVelocity, -1, 1));
+        if (angleOfAttack < 1f)
+            angleOfAttack = 1f;
 
 
         
         // α * 2 * PI * (AR / AR + 2)
         var inducedLift = angleOfAttack * (aspectRatio / (aspectRatio + 2f)) * 2f * Mathf.PI;
 
-        
+
 
         // V ^ 2 * R * 0.5 * A
-        var pressure = rb.velocity.sqrMagnitude * 1.2754f * 0.5f * wingArea;
-        float cl;
-        if (angleOfAttack < -1f || angleOfAttack > 26f)
+        //var pressure = rb.velocity.sqrMagnitude * 1.2754f * 0.5f * wingArea;
+        float q = 1.2754f * rb.velocity.sqrMagnitude * 0.5f;
+        Vector3 ParallelInPlane = Vector3.ProjectOnPlane(rb.velocity, transform.forward).normalized;
+        Vector3 perp = Vector3.Cross(transform.forward, ParallelInPlane).normalized;
+        Vector3 liftDirection = Vector3.Cross(perp, rb.velocity).normalized;
+
+        
+        float minStall = 0f;
+        float liftSlope = 4f;
+        float lastStall = stall;
+        stall = 0f;
+        float tmp = 0f;
+        float AoAMax = 1.6f / liftSlope;
+        float AbsAoA = Mathf.Abs(angleOfAttack);
+        if (AbsAoA > AoAMax)
         {
-            cl = -Mathf.Abs((angleOfAttack - 13) / 26f) + 1f;
+            stall = Mathf.Clamp((AbsAoA - AoAMax) * 10, 0, 1);
+            stall += tmp;
+            stall = Mathf.Max(stall, lastStall);
         }
         else
         {
-            cl = Mathf.Clamp(-1f / 100f * (angleOfAttack * angleOfAttack - 26f * angleOfAttack - 31f), 0f, 2f);
+            stall = 1 - Mathf.Clamp((AoAMax - AbsAoA) * 10, 0, 1);
+            stall += tmp;
+            stall = Mathf.Min(stall, lastStall);
         }
-        //var cl = 2 * Mathf.PI * angleOfAttack * Mathf.Deg2Rad;
-        var cd = 0.001f * Mathf.Clamp(angleOfAttack, 0f, 22f) * Mathf.Clamp(angleOfAttack, 0f, 22f) + 0.025f;
 
-        //var lift = inducedLift * pressure;
-        var lift = 0.5f * rb.velocity.magnitude * rb.velocity.magnitude * 1.225f * wingArea * cl;
-        var inducedDrag = (lift * lift) / (0.5f * 1.225f * rb.velocity.magnitude * rb.velocity.magnitude * wingArea * Mathf.PI * 0.9f * aspectRatio);
-        var formDrag = 0.5f * 1.225f * rb.velocity.magnitude * rb.velocity.magnitude * wingArea * cd;
-        var drag = inducedDrag + formDrag;
+        stall = Mathf.Clamp(stall, lastStall - 2 * Time.fixedDeltaTime, lastStall + 2 * Time.fixedDeltaTime);
+        stall = Mathf.Clamp(stall, 0, 1);
 
-        // *flip sign(s) if necessary*
-        var dragDirection = Quaternion.LookRotation(rb.velocity) * Vector3.back;
-        //var liftDirection = Vector3.Cross(dragDirection, transform.right);
-        var liftDirection = Quaternion.LookRotation(rb.velocity) * Vector3.up;
-        Debug.DrawRay(transform.position, liftDirection * 100, Color.green);
-        Debug.DrawRay(transform.position, transform.forward * 100, Color.red);
-        //Debug.Log("lift : " + lift);
-        Debug.Log("speed : " + rb.velocity.magnitude);
-        //Debug.Log("AoA : " + angleOfAttack);
+        float piARe = 4 * Mathf.PI;
+        float Cl = liftSlope * Mathf.Sin(2f * angleOfAttack) * 0.5f;
+        float Cd = (0.006f + Cl * Cl / piARe);
+        stall = Mathf.Clamp(stall, minStall, 1);
 
-        // Lift + Drag = Total Force
-        rb.AddForce(liftDirection * lift);
-        //rb.AddForce(dragDirection * drag);
+        Cl -= Cl * stall * 0.5f;
+        Cd += Cd * stall * 1.5f;
+        Debug.Log("Cl : " + Cl);
+
+        float S = 17f * 4.27f;
+        Vector3 L = liftDirection * (q * Cl * S);
+        Vector3 D = rb.velocity.normalized * (-q * Cd * S);
+        Vector3 force = (L + D) * 0.001f;
+        rb.AddForce(force * 2f);
+        Debug.Log("speed :" + rb.velocity.magnitude); 
     }
 
     private void InputControl()
@@ -130,14 +147,14 @@ public class plane : MonoBehaviour
         pitch = Input.GetAxis("Vertical") * torque;
         roll = Input.GetAxis("Roll") * torque;
 
-        rb.AddTorque(transform.right * pitch * rb.velocity.magnitude);
+        rb.AddTorque(transform.right * pitch / 2 * rb.velocity.magnitude);
         rb.AddTorque(transform.forward * roll / 10 * rb.velocity.magnitude);
         //Debug.Log("pitch: " + pitch);
     }
 
     private void PitchPID()
     {
-        PIDController p = new PIDController(rb.angularVelocity.x, 5f, 10f, 5f);
+        PIDController p = new PIDController((float)System.Math.Round(rb.angularVelocity.x, 2), 5f, 10f, 5f);
         if (Input.GetAxis("Vertical") != 0)
         {
             return;
@@ -170,7 +187,7 @@ public class plane : MonoBehaviour
         float tarRoll = 0;
         
 
-        rb.AddTorque(transform.forward * p.Update(tarRoll, rb.angularVelocity.z, Time.deltaTime) * 10 * rb.velocity.magnitude);
+        rb.AddTorque(transform.forward * p.Update(tarRoll, rb.angularVelocity.z, Time.deltaTime) * 100 * rb.velocity.magnitude);
     }
 
     private void YawPID()
