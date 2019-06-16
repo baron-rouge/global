@@ -9,6 +9,7 @@ public class flecheControl : MonoBehaviour
     private Vector3 screenPoint;
     private Vector3 offset;
     public Transform cone;
+    public string axis;
 
     void OnMouseDown()
     {
@@ -23,7 +24,10 @@ public class flecheControl : MonoBehaviour
         Vector3 curScreenPoint = new Vector3(Input.mousePosition.x, Input.mousePosition.y, screenPoint.z);
 
         Vector3 curPosition = Camera.main.ScreenToWorldPoint(curScreenPoint) + offset;
-        transform.position = new Vector3((float)System.Math.Round(curPosition.x, 1), transform.position.y, transform.position.z);
+        if (axis == "x")
+            transform.position = new Vector3((float)System.Math.Round(curPosition.x, 1), transform.position.y, transform.position.z);
+        else if (axis == "xy")
+            transform.position = new Vector3((float)System.Math.Round(curPosition.x, 1), transform.position.y, (float)System.Math.Round(curPosition.y, 1));
 
     }
 
