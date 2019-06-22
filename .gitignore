@@ -35,5 +35,5 @@ sysinfo.txt
 *.apk
 *.unitypackage
 
-Assets/Scenes/terrain/LightingData.asset
-Assets/Scenes/hangar/LightingData.asset
+Red Birds/Assets/Scenes/terrain/LightingData.asset
+Red Birds/Assets/Scenes/hangar/LightingData.asset
