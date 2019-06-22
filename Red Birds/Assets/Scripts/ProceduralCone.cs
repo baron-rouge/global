@@ -11,8 +11,6 @@ public class ProceduralCone : MonoBehaviour
     MeshFilter mf;
     Mesh mesh;
     MeshCollider mc;
-    Texture mainTex;
-    Material mat;
     // Start is called before the first frame update
     void Start()
     {
@@ -21,7 +19,6 @@ public class ProceduralCone : MonoBehaviour
         lastArrowPosBr = flecheBr.localPosition;
         lastArrowPosTr = flecheTr.localPosition;
         mc = gameObject.GetComponent<MeshCollider>();
-        mat = gameObject.GetComponent<Renderer>().material;
     }
     
     // Update is called once per frame
@@ -34,7 +31,6 @@ public class ProceduralCone : MonoBehaviour
         
         MeshUtils.CreateCone(2f, flecheBr.GetComponent<MeshRenderer>().bounds.center.x - flecheBr.GetComponent<MeshRenderer>().bounds.extents.x - transform.position.x, transform.position.x - flecheTr.GetComponent<MeshRenderer>().bounds.center.x - flecheTr.GetComponent<MeshRenderer>().bounds.extents.x, 18, mesh);
         mc.sharedMesh = mesh;
-        mat.mainTexture = mainTex;
         lastArrowPosTr = arrowPosTr;
         lastArrowPosBr = arrowPosBr;
     }
