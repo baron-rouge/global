@@ -4,8 +4,9 @@ using UnityEngine;
 
 public static class MeshUtils
 {
-    public static void CreateCone(float height, float bottomRadius, float topRadius, int nbSides, Mesh mesh)
+    public static Mesh CreateCone(float height, float bottomRadius, float topRadius, int nbSides)
     {
+        Mesh mesh = new Mesh();
         mesh.Clear();
         int nbHeightSeg = 1; // Not implemented yet
 
@@ -184,6 +185,7 @@ public static class MeshUtils
 
         mesh.RecalculateBounds();
         mesh.Optimize();
+        return mesh;
     }
 
     public static void CreateWing(Mesh mesh, float length, float width_r, float width_t, float offset, float thickness_r, float thickness_t)

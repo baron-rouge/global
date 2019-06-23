@@ -23,6 +23,7 @@ public class PartUI : Editor
         EditorGUILayout.PropertyField(serializedObject.FindProperty("upgrades"), true);
         EditorGUILayout.PropertyField(serializedObject.FindProperty("nodes"), true);
         EditorGUILayout.PropertyField(serializedObject.FindProperty("nodeMaterial"));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("arrowMesh"));
         serializedObject.ApplyModifiedProperties();
     }
 }

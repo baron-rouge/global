@@ -32,9 +32,10 @@ public class ProceduralCone : MonoBehaviour
         if (arrowPosBr.x == lastArrowPosBr.x && arrowPosTr.x == lastArrowPosTr.x)
             return;
         
-        MeshUtils.CreateCone(2f, flecheBr.GetComponent<MeshRenderer>().bounds.center.x - flecheBr.GetComponent<MeshRenderer>().bounds.extents.x - transform.position.x, transform.position.x - flecheTr.GetComponent<MeshRenderer>().bounds.center.x - flecheTr.GetComponent<MeshRenderer>().bounds.extents.x, 18, mesh);
+        mf.mesh = MeshUtils.CreateCone(2f, flecheBr.GetComponent<MeshRenderer>().bounds.center.x - flecheBr.GetComponent<MeshRenderer>().bounds.extents.x - transform.position.x, transform.position.x - flecheTr.GetComponent<MeshRenderer>().bounds.center.x - flecheTr.GetComponent<MeshRenderer>().bounds.extents.x, 18);
+        
         mc.sharedMesh = mesh;
-        mat.mainTexture = mainTex;
+        //mat.mainTexture = mainTex;
         lastArrowPosTr = arrowPosTr;
         lastArrowPosBr = arrowPosBr;
     }
