@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class FuncJetEngine : MonoBehaviour
+public class FuncJetEngine : PartFunction
 {
     private string engineID;
     private Transform thrustTransform;
